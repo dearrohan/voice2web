@@ -1,1 +1,1343 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Voice2Web — Build Websites by Speaking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b12;
+    --surface: #0e1420;
+    --surface2: #141c2e;
+    --border: rgba(99,179,237,0.12);
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --glow: rgba(79,142,247,0.25);
+    --text: #e8edf5;
+    --text2: #7a8ba6;
+    --text3: #4a5a72;
+    --red: #f87171;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --r: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow blobs */
+  .blob1, .blob2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(79,142,247,0.12), transparent 70%);
+    top: -150px; left: -150px;
+  }
+  .blob2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(124,58,237,0.1), transparent 70%);
+    bottom: -100px; right: -100px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(8,11,18,0.6);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-badge {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 20px;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 64px 24px 48px;
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    padding: 6px 16px;
+    background: rgba(79,142,247,0.08);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 20px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 18px;
+  }
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, #4f8ef7, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--text2);
+    font-size: 1.05rem;
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .app-shell {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    height: calc(100vh - 220px);
+    min-height: 600px;
+    max-height: 900px;
+    margin: 0 24px 32px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 32px 80px rgba(0,0,0,0.5);
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-label {
+    font-size: 0.7rem;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  /* ── MIC BUTTON ── */
+  .mic-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mic-btn {
+    position: relative;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(145deg, var(--accent), var(--accent2));
+    color: white;
+    font-size: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 0 var(--glow), 0 8px 24px rgba(79,142,247,0.3);
+  }
+  .mic-btn:hover { transform: scale(1.05); box-shadow: 0 0 0 8px var(--glow), 0 12px 32px rgba(79,142,247,0.4); }
+  .mic-btn.recording {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    animation: pulse-ring 1.5s ease-out infinite;
+    box-shadow: 0 0 0 0 rgba(239,68,68,0.4), 0 8px 24px rgba(239,68,68,0.4);
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4), 0 8px 24px rgba(239,68,68,0.3); }
+    70% { box-shadow: 0 0 0 20px rgba(239,68,68,0), 0 8px 24px rgba(239,68,68,0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(239,68,68,0), 0 8px 24px rgba(239,68,68,0.3); }
+  }
+
+  .mic-status {
+    font-size: 0.8rem;
+    color: var(--text2);
+    text-align: center;
+  }
+  .mic-status.active { color: var(--red); }
+
+  /* Waveform bars */
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .waveform.active { opacity: 1; }
+  .waveform .bar {
+    width: 3px;
+    height: 4px;
+    background: var(--red);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  .waveform .bar:nth-child(1) { animation-delay: 0s; }
+  .waveform .bar:nth-child(2) { animation-delay: 0.1s; }
+  .waveform .bar:nth-child(3) { animation-delay: 0.2s; }
+  .waveform .bar:nth-child(4) { animation-delay: 0.15s; }
+  .waveform .bar:nth-child(5) { animation-delay: 0.05s; }
+  .waveform .bar:nth-child(6) { animation-delay: 0.25s; }
+  .waveform .bar:nth-child(7) { animation-delay: 0.1s; }
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 20px; }
+  }
+
+  /* ── PROMPT BOX ── */
+  .prompt-wrap {
+    position: relative;
+  }
+  .prompt-box {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    line-height: 1.6;
+    min-height: 90px;
+    transition: border-color 0.2s;
+  }
+  .prompt-box:focus { border-color: rgba(79,142,247,0.4); }
+  .prompt-box::placeholder { color: var(--text3); }
+
+  /* ── OPTIONS ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .opt-group label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text3);
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+  }
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 8px 10px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a5a72' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  select:focus { border-color: rgba(79,142,247,0.4); }
+  select option { background: #0e1420; }
+
+  /* ── GENERATE BUTTON ── */
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .generate-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+  }
+  .generate-btn:hover::after { transform: translateX(100%); }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,142,247,0.35); }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── QUICK COMMANDS ── */
+  .commands-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px;
+  }
+  .commands-scroll::-webkit-scrollbar { width: 4px; }
+  .commands-scroll::-webkit-scrollbar-track { background: transparent; }
+  .commands-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .cmd-chip {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .cmd-chip:hover {
+    background: rgba(79,142,247,0.08);
+    border-color: rgba(79,142,247,0.25);
+    color: var(--text);
+  }
+  .cmd-chip .chip-icon { margin-right: 6px; font-size: 0.85rem; }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .preview-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .preview-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .tab-btn.active {
+    background: rgba(79,142,247,0.12);
+    color: var(--accent);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text2); background: rgba(255,255,255,0.04); }
+
+  .preview-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-btn:hover { border-color: rgba(79,142,247,0.35); color: var(--text); }
+
+  /* Status badge */
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text3);
+    display: inline-block;
+  }
+  .status-dot.ready { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.loading { background: var(--yellow); animation: blink 1s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* ── PREVIEW AREA ── */
+  .preview-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #preview-frame {
+    width: 100%; height: 100%;
+    border: none;
+    background: white;
+    display: none;
+  }
+
+  #code-view {
+    width: 100%; height: 100%;
+    overflow: auto;
+    padding: 20px;
+    display: none;
+  }
+  #code-view::-webkit-scrollbar { width: 6px; height: 6px; }
+  #code-view::-webkit-scrollbar-track { background: transparent; }
+  #code-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  #code-view pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: #a8d8a8;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Empty state */
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text3);
+  }
+  .empty-icon {
+    width: 80px; height: 80px;
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--text3);
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .empty-state p { font-size: 0.88rem; text-align: center; max-width: 240px; line-height: 1.6; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.85rem;
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    header { padding: 14px 20px; }
+    .header-badge { display: none; }
+    .hero { padding: 40px 16px 32px; }
+    .app-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      margin: 0 12px 24px;
+      height: auto;
+      max-height: none;
+    }
+    .left-panel {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .commands-scroll { max-height: 160px; }
+    .right-panel { min-height: 480px; }
+    .preview-bar { padding: 0 14px; }
+  }
+  @media (max-width: 480px) {
+    .app-shell { margin: 0 8px 16px; border-radius: 14px; }
+    .options-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="blob1"></div>
+<div class="blob2"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎤</div>
+    Voice<span>2</span>Web
+  </div>
+  <div class="header-badge">AI Website Generator</div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">🚀 Speak. Generate. Launch.</div>
+  <h1>Build Websites<br><span class="gradient">With Your Voice</span></h1>
+  <p>Say what you want — AI creates a fully responsive website in seconds. No coding required.</p>
+</div>
+
+<!-- APP SHELL -->
+<div class="app-shell">
+
+  <!-- LEFT: Controls -->
+  <div class="left-panel">
+
+    <!-- Mic -->
+    <div class="mic-area">
+      <button class="mic-btn" id="micBtn" title="Hold to speak">🎤</button>
+      <div class="waveform" id="waveform">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <div class="mic-status" id="micStatus">Click mic to speak your command</div>
+    </div>
+
+    <!-- Prompt -->
+    <div class="panel-section">
+      <div class="panel-label">Your Command</div>
+      <div class="prompt-wrap">
+        <textarea class="prompt-box" id="promptBox"
+          placeholder="e.g. Create a dark portfolio website with hero section, about me, projects and contact form..."></textarea>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="panel-section">
+      <div class="panel-label">Options</div>
+      <div class="options-grid">
+        <div class="opt-group">
+          <label>Website Type</label>
+          <select id="siteType">
+            <option value="auto">Auto Detect</option>
+            <option value="portfolio">Portfolio</option>
+            <option value="business">Business</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="ecommerce">E-Commerce</option>
+            <option value="blog">Blog</option>
+            <option value="gym">Gym / Fitness</option>
+            <option value="startup">Startup</option>
+            <option value="agency">Agency</option>
+            <option value="medical">Medical / Clinic</option>
+          </select>
+        </div>
+        <div class="opt-group">
+          <label>Color Theme</label>
+          <select id="colorTheme">
+            <option value="auto">Auto Detect</option>
+            <option value="dark">Dark Modern</option>
+            <option value="light">Clean Light</option>
+            <option value="blue">Professional Blue</option>
+            <option value="green">Fresh Green</option>
+            <option value="purple">Creative Purple</option>
+            <option value="red">Bold Red</option>
+            <option value="orange">Energetic Orange</option>
+            <option value="black-gold">Black & Gold</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <div class="panel-section">
+      <button class="generate-btn" id="generateBtn" onclick="generateWebsite()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">✨ Generate Website</span>
+      </button>
+    </div>
+
+    <!-- Quick Commands -->
+    <div class="commands-scroll">
+      <div class="panel-label">Quick Examples</div>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">🎨</span>Create a dark portfolio for a web developer with skills, projects and contact
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">🍕</span>Make a restaurant website with menu, gallery, reservations and footer
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">💼</span>Build a startup landing page with hero, features, pricing and FAQ section
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">💪</span>Create a gym website with hero, services, trainers and membership pricing
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">🛍️</span>Design an e-commerce homepage with banner, featured products and newsletter
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">🏥</span>Make a clinic website with services, doctors team and appointment booking
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">📸</span>Create a photography portfolio with dark theme and image gallery
+      </button>
+      <button class="cmd-chip" onclick="useCommand(this)">
+        <span class="chip-icon">🚀</span>Build a SaaS product page with features, testimonials and pricing table
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div class="right-panel">
+    <div class="preview-bar">
+      <div class="preview-tabs">
+        <button class="tab-btn active" onclick="switchTab('preview', this)">Preview</button>
+        <button class="tab-btn" onclick="switchTab('code', this)">HTML Code</button>
+      </div>
+      <div class="preview-actions">
+        <span class="status-dot" id="statusDot"></span>
+        <button class="action-btn" onclick="downloadWebsite()">⬇ Download</button>
+        <button class="action-btn" onclick="copyCode()">⎘ Copy Code</button>
+      </div>
+    </div>
+
+    <div class="preview-content">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🌐</div>
+        <p>Your generated website will appear here. Speak or type a command to get started.</p>
+      </div>
+      <iframe id="preview-frame"></iframe>
+      <div id="code-view"><pre id="code-content"></pre></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ──────────────────────────────────────────────
+// VOICE RECOGNITION
+// ──────────────────────────────────────────────
+let recognition = null;
+let isRecording = false;
+
+function initVoice() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return null;
+  const r = new SpeechRec();
+  r.continuous = false;
+  r.interimResults = true;
+  r.lang = 'en-US';
+  return r;
+}
+
+document.getElementById('micBtn').addEventListener('click', function() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
+
+function startRecording() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    showToast('⚠️ Voice not supported in this browser. Use Chrome.', '#f59e0b');
+    return;
+  }
+  recognition = initVoice();
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micBtn').textContent = '⏹';
+    document.getElementById('waveform').classList.add('active');
+    document.getElementById('micStatus').textContent = 'Listening… speak now';
+    document.getElementById('micStatus').classList.add('active');
+  };
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('promptBox').value = transcript;
+  };
+  recognition.onend = () => {
+    stopRecording();
+    if (document.getElementById('promptBox').value.trim()) {
+      showToast('✅ Voice captured! Click Generate to build your site.', '#34d399');
+    }
+  };
+  recognition.onerror = (e) => {
+    stopRecording();
+    if (e.error === 'not-allowed') showToast('🎤 Microphone permission denied.', '#f87171');
+    else showToast('Voice error: ' + e.error, '#f87171');
+  };
+  recognition.start();
+}
+
+function stopRecording() {
+  if (recognition) recognition.stop();
+  isRecording = false;
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('micBtn').textContent = '🎤';
+  document.getElementById('waveform').classList.remove('active');
+  document.getElementById('micStatus').textContent = 'Click mic to speak your command';
+  document.getElementById('micStatus').classList.remove('active');
+}
+
+function useCommand(el) {
+  const text = el.textContent.replace(el.querySelector('.chip-icon').textContent, '').trim();
+  document.getElementById('promptBox').value = text;
+  document.getElementById('promptBox').focus();
+}
+
+// ──────────────────────────────────────────────
+// PARSE COMMAND
+// ──────────────────────────────────────────────
+function parseCommand(prompt, typeOverride, themeOverride) {
+  const p = prompt.toLowerCase();
+
+  // Detect type
+  let type = typeOverride !== 'auto' ? typeOverride : 'portfolio';
+  if (typeOverride === 'auto') {
+    if (p.includes('restaurant') || p.includes('food') || p.includes('cafe') || p.includes('pizza')) type = 'restaurant';
+    else if (p.includes('gym') || p.includes('fitness') || p.includes('workout') || p.includes('trainer')) type = 'gym';
+    else if (p.includes('shop') || p.includes('store') || p.includes('ecommerce') || p.includes('product')) type = 'ecommerce';
+    else if (p.includes('clinic') || p.includes('doctor') || p.includes('hospital') || p.includes('medical')) type = 'medical';
+    else if (p.includes('startup') || p.includes('saas') || p.includes('app') || p.includes('software')) type = 'startup';
+    else if (p.includes('agency') || p.includes('digital') || p.includes('marketing')) type = 'agency';
+    else if (p.includes('blog') || p.includes('news') || p.includes('article')) type = 'blog';
+    else if (p.includes('business') || p.includes('company') || p.includes('corporate')) type = 'business';
+    else type = 'portfolio';
+  }
+
+  // Detect theme
+  let theme = themeOverride !== 'auto' ? themeOverride : 'dark';
+  if (themeOverride === 'auto') {
+    if (p.includes('dark') || p.includes('black')) theme = 'dark';
+    else if (p.includes('light') || p.includes('white') || p.includes('clean')) theme = 'light';
+    else if (p.includes('blue') || p.includes('professional')) theme = 'blue';
+    else if (p.includes('green') || p.includes('nature')) theme = 'green';
+    else if (p.includes('purple') || p.includes('violet') || p.includes('creative')) theme = 'purple';
+    else if (p.includes('red') || p.includes('bold')) theme = 'red';
+    else if (p.includes('orange') || p.includes('energy')) theme = 'orange';
+    else if (p.includes('gold') || p.includes('luxury')) theme = 'black-gold';
+    else theme = type === 'medical' ? 'blue' : type === 'restaurant' ? 'red' : 'dark';
+  }
+
+  // Detect sections from prompt
+  const sections = [];
+  if (p.includes('hero') || p.includes('banner') || p.includes('header')) sections.push('hero');
+  else sections.push('hero');
+
+  if (p.includes('about') || p.includes('story') || p.includes('us')) sections.push('about');
+  if (p.includes('service') || p.includes('feature') || p.includes('what we do')) sections.push('services');
+  if (p.includes('skill')) sections.push('skills');
+  if (p.includes('project') || p.includes('portfolio') || p.includes('work')) sections.push('projects');
+  if (p.includes('team') || p.includes('trainer') || p.includes('doctor') || p.includes('staff')) sections.push('team');
+  if (p.includes('pric') || p.includes('plan') || p.includes('member')) sections.push('pricing');
+  if (p.includes('testimonial') || p.includes('review') || p.includes('client')) sections.push('testimonials');
+  if (p.includes('gallery') || p.includes('photo') || p.includes('image')) sections.push('gallery');
+  if (p.includes('faq') || p.includes('question') || p.includes('answer')) sections.push('faq');
+  if (p.includes('menu') || p.includes('food item')) sections.push('menu');
+  if (p.includes('contact') || p.includes('form') || p.includes('reach')) sections.push('contact');
+  if (p.includes('newsletter') || p.includes('subscribe')) sections.push('newsletter');
+  if (sections.length < 3) {
+    const defaults = { portfolio: ['about','skills','projects','contact'], restaurant: ['about','menu','gallery','contact'], gym: ['services','team','pricing','contact'], startup: ['services','pricing','testimonials','contact'], medical: ['services','team','contact'], business: ['about','services','contact'], ecommerce: ['about','gallery','newsletter','contact'], agency: ['services','projects','team','contact'], blog: ['about','newsletter','contact'] };
+    (defaults[type] || ['about','services','contact']).forEach(s => { if (!sections.includes(s)) sections.push(s); });
+  }
+
+  // Extract name / title from prompt
+  let title = '';
+  const nameMatch = prompt.match(/(?:for|named?|called?)\s+([A-Z][a-zA-Z\s&0-9]+?)(?:\s+with|\s+website|\s+site|$)/);
+  if (nameMatch) title = nameMatch[1].trim();
+
+  return { type, theme, sections, title };
+}
+
+// ──────────────────────────────────────────────
+// THEME DEFINITIONS
+// ──────────────────────────────────────────────
+const themes = {
+  dark: { bg:'#0f0f13', surface:'#1a1a24', accent:'#6c63ff', accent2:'#a78bfa', text:'#e8e8f0', text2:'#9090b0', nav:'#0f0f13', navText:'#e8e8f0', btn:'linear-gradient(135deg,#6c63ff,#a78bfa)', card:'#1e1e2e' },
+  light: { bg:'#f8f9fc', surface:'#ffffff', accent:'#2563eb', accent2:'#3b82f6', text:'#1e293b', text2:'#64748b', nav:'#ffffff', navText:'#1e293b', btn:'linear-gradient(135deg,#2563eb,#3b82f6)', card:'#f1f5f9' },
+  blue: { bg:'#030a1a', surface:'#071428', accent:'#00b4ff', accent2:'#0088cc', text:'#e0f2fe', text2:'#7aadcc', nav:'#030a1a', navText:'#e0f2fe', btn:'linear-gradient(135deg,#00b4ff,#0088cc)', card:'#071c38' },
+  green: { bg:'#061008', surface:'#0d2010', accent:'#22c55e', accent2:'#16a34a', text:'#dcfce7', text2:'#86d488', nav:'#061008', navText:'#dcfce7', btn:'linear-gradient(135deg,#22c55e,#16a34a)', card:'#102418' },
+  purple: { bg:'#0a0514', surface:'#150920', accent:'#d946ef', accent2:'#a21caf', text:'#fae8ff', text2:'#c084fc', nav:'#0a0514', navText:'#fae8ff', btn:'linear-gradient(135deg,#d946ef,#a21caf)', card:'#1c0e2c' },
+  red: { bg:'#110507', surface:'#1f0a0e', accent:'#ef4444', accent2:'#dc2626', text:'#fee2e2', text2:'#fca5a5', nav:'#110507', navText:'#fee2e2', btn:'linear-gradient(135deg,#ef4444,#dc2626)', card:'#2a0e10' },
+  orange: { bg:'#0f0800', surface:'#1e1200', accent:'#f97316', accent2:'#ea580c', text:'#ffedd5', text2:'#fdba74', nav:'#0f0800', navText:'#ffedd5', btn:'linear-gradient(135deg,#f97316,#ea580c)', card:'#291500' },
+  'black-gold': { bg:'#080700', surface:'#141200', accent:'#d4af37', accent2:'#b8960c', text:'#fefce8', text2:'#d4af37', nav:'#080700', navText:'#fefce8', btn:'linear-gradient(135deg,#d4af37,#b8960c)', card:'#1c1900' }
+};
+
+// ──────────────────────────────────────────────
+// SECTION GENERATORS
+// ──────────────────────────────────────────────
+function genNavbar(t, parsed, siteTitle) {
+  const links = parsed.sections.filter(s => s !== 'hero').map(s => `<a href="#${s}" style="color:${t.text2};text-decoration:none;font-size:0.9rem;transition:color 0.2s" onmouseover="this.style.color='${t.accent}'" onmouseout="this.style.color='${t.text2}'">${s.charAt(0).toUpperCase()+s.slice(1)}</a>`).join('');
+  return `<nav style="position:fixed;top:0;left:0;right:0;z-index:100;background:${t.nav}ee;backdrop-filter:blur(12px);border-bottom:1px solid ${t.accent}20;padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px">
+  <div style="font-weight:800;font-size:1.3rem;color:${t.accent}">${siteTitle}</div>
+  <div style="display:flex;gap:28px;align-items:center">${links}
+    <a href="#contact" style="background:${t.btn};color:white;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600">Get Started</a>
+  </div>
+</nav>`;
+}
+
+function genHero(t, parsed, prompt) {
+  const headlines = {
+    portfolio: ['Crafting Digital Experiences', 'Code. Design. Deliver.', 'Building the Future, One Pixel at a Time'],
+    restaurant: ['Taste the Difference', 'Where Every Bite Tells a Story', 'Authentic Flavors, Unforgettable Moments'],
+    gym: ['Transform Your Body. Transform Your Life.', 'Strength Starts Here', 'Push Beyond Your Limits'],
+    startup: ['The Future is Being Built Today', 'Innovation at Scale', 'Solve Real Problems. Ship Fast.'],
+    ecommerce: ['Shop Smarter, Live Better', 'Premium Products, Unbeatable Prices', 'Your Style, Your Story'],
+    medical: ['Your Health, Our Priority', 'Expert Care, Compassionate Service', 'Healing with Heart'],
+    agency: ['We Build Brands That Matter', 'Creative Solutions, Real Results', 'Where Strategy Meets Design'],
+    blog: ['Ideas Worth Sharing', 'Explore, Learn, Grow', 'Stories That Inspire'],
+    business: ['Excellence in Every Detail', 'Your Success is Our Business', 'Building Trust, Delivering Value'],
+  };
+  const subs = {
+    portfolio: 'Full-stack developer passionate about creating beautiful, functional web experiences.',
+    restaurant: 'Join us for an unforgettable dining experience crafted with fresh, local ingredients.',
+    gym: 'Expert trainers, state-of-the-art equipment, and a community that pushes you to be your best.',
+    startup: 'We\'re on a mission to change the way the world works — one product at a time.',
+    ecommerce: 'Discover thousands of premium products with free shipping and easy returns.',
+    medical: 'Providing comprehensive healthcare services with cutting-edge technology and compassionate staff.',
+    agency: 'We partner with ambitious brands to create meaningful digital experiences.',
+    blog: 'Discover curated articles on technology, design, and the future of work.',
+    business: 'Delivering exceptional results through expertise, innovation, and dedication.',
+  };
+  const h = headlines[parsed.type] || headlines.portfolio;
+  const headline = h[Math.floor(Math.random() * h.length)];
+  const sub = subs[parsed.type] || subs.portfolio;
+  return `<section id="hero" style="min-height:100vh;display:flex;align-items:center;padding:80px 5% 40px;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%, ${t.accent}15, transparent 60%);pointer-events:none"></div>
+  <div style="position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,${t.accent}08,transparent 70%);border-radius:50%"></div>
+  <div style="max-width:700px;position:relative;z-index:2">
+    <div style="display:inline-block;padding:6px 16px;background:${t.accent}18;border:1px solid ${t.accent}35;border-radius:20px;font-size:0.8rem;color:${t.accent};letter-spacing:1px;margin-bottom:20px">🚀 Welcome</div>
+    <h1 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:20px;letter-spacing:-1.5px">${headline}</h1>
+    <p style="font-size:1.1rem;color:${t.text2};max-width:500px;line-height:1.7;margin-bottom:36px">${sub}</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <a href="#contact" style="background:${t.btn};color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;display:inline-block;transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Get Started →</a>
+      <a href="#${parsed.sections[1]||'about'}" style="background:transparent;color:${t.text};border:1px solid ${t.accent}40;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:500;font-size:1rem;display:inline-block">Learn More</a>
+    </div>
+  </div>
+</section>`;
+}
+
+function genAbout(t) {
+  return `<section id="about" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center">
+    <div>
+      <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">About Us</p>
+      <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:20px;letter-spacing:-0.5px">Our Story & Mission</h2>
+      <p style="color:${t.text2};line-height:1.8;margin-bottom:16px">We are a passionate team dedicated to delivering exceptional experiences. Our journey began with a simple idea: that great service and genuine care can transform how people feel.</p>
+      <p style="color:${t.text2};line-height:1.8;margin-bottom:28px">With years of experience and a commitment to excellence, we've built a reputation for quality, reliability, and innovation that our clients trust.</p>
+      <div style="display:flex;gap:32px">
+        <div><div style="font-size:2rem;font-weight:900;color:${t.accent}">5+</div><div style="color:${t.text2};font-size:0.85rem">Years Experience</div></div>
+        <div><div style="font-size:2rem;font-weight:900;color:${t.accent}">200+</div><div style="color:${t.text2};font-size:0.85rem">Happy Clients</div></div>
+        <div><div style="font-size:2rem;font-weight:900;color:${t.accent}">98%</div><div style="color:${t.text2};font-size:0.85rem">Satisfaction</div></div>
+      </div>
+    </div>
+    <div style="background:${t.card};border-radius:20px;padding:40px;border:1px solid ${t.accent}15;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;background:${t.accent}08;border-radius:50%"></div>
+      <div style="font-size:3rem;margin-bottom:16px">🎯</div>
+      <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:12px">Our Vision</h3>
+      <p style="color:${t.text2};line-height:1.7;font-size:0.95rem">To be the leading force in our industry, setting new standards for quality, innovation, and customer satisfaction globally.</p>
+    </div>
+  </div>
+</section>`;
+}
+
+function genServices(t) {
+  const items = [
+    { icon:'⚡', title:'Lightning Fast', desc:'Optimized for speed with modern technologies that deliver blazing performance.' },
+    { icon:'🎨', title:'Beautiful Design', desc:'Stunning interfaces crafted with attention to every detail and pixel.' },
+    { icon:'📱', title:'Mobile Friendly', desc:'Fully responsive across all devices — mobile, tablet, and desktop.' },
+    { icon:'🔒', title:'Secure & Reliable', desc:'Enterprise-grade security with 99.9% uptime guarantee.' },
+    { icon:'🤝', title:'24/7 Support', desc:'Round-the-clock dedicated support team ready to assist you anytime.' },
+    { icon:'🚀', title:'Fast Delivery', desc:'Quick turnaround times without compromising on quality or standards.' }
+  ];
+  return `<section id="services" style="padding:80px 5%">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">What We Offer</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px">Our Services</h2>
+    <p style="color:${t.text2};max-width:500px;margin:0 auto 48px;line-height:1.7">We provide comprehensive solutions tailored to meet your unique needs and exceed your expectations.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;text-align:left">
+      ${items.map(i=>`<div style="background:${t.card};border:1px solid ${t.accent}15;border-radius:16px;padding:28px;transition:transform 0.3s,border-color 0.3s" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='${t.accent}40'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='${t.accent}15'">
+        <div style="font-size:2rem;margin-bottom:14px">${i.icon}</div>
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:8px">${i.title}</h3>
+        <p style="color:${t.text2};font-size:0.9rem;line-height:1.6">${i.desc}</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genSkills(t) {
+  const skills = [['HTML/CSS','95'],['JavaScript','90'],['React','85'],['Node.js','80'],['UI/UX Design','88'],['Database','75']];
+  return `<section id="skills" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:800px;margin:0 auto">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Expertise</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:40px;letter-spacing:-0.5px">My Skills</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      ${skills.map(([name,val])=>`<div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:600">${name}</span><span style="color:${t.accent}">${val}%</span></div>
+        <div style="background:${t.card};border-radius:8px;height:8px;overflow:hidden">
+          <div style="background:${t.btn};width:${val}%;height:100%;border-radius:8px;transition:width 1s ease"></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genProjects(t) {
+  const projects = [
+    { emoji:'🛒', title:'E-Commerce Platform', desc:'Full-stack shopping platform with payment integration and admin dashboard.', tags:['React','Node.js','MongoDB'] },
+    { emoji:'📱', title:'Mobile Banking App', desc:'Secure and intuitive mobile banking experience with real-time transactions.', tags:['React Native','Firebase'] },
+    { emoji:'🤖', title:'AI Dashboard', desc:'Analytics platform powered by machine learning for data-driven decisions.', tags:['Python','TensorFlow','Vue.js'] },
+    { emoji:'🎵', title:'Music Streaming App', desc:'Feature-rich music player with personalized recommendations.', tags:['React','Redux','AWS'] },
+    { emoji:'🗺️', title:'Travel Planner', desc:'Smart trip planning app with AI-powered itinerary suggestions.', tags:['Next.js','Maps API'] },
+    { emoji:'💬', title:'Real-time Chat', desc:'Scalable chat application with end-to-end encryption.', tags:['Socket.io','Express'] }
+  ];
+  return `<section id="projects" style="padding:80px 5%">
+  <div style="max-width:1100px;margin:0 auto">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">My Work</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:48px;letter-spacing:-0.5px">Featured Projects</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      ${projects.map(p=>`<div style="background:${t.card};border:1px solid ${t.accent}15;border-radius:16px;overflow:hidden;transition:transform 0.3s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background:${t.surface};padding:32px;font-size:3rem;text-align:center">${p.emoji}</div>
+        <div style="padding:20px">
+          <h3 style="font-weight:700;margin-bottom:8px">${p.title}</h3>
+          <p style="color:${t.text2};font-size:0.88rem;line-height:1.6;margin-bottom:14px">${p.desc}</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${p.tags.map(tag=>`<span style="background:${t.accent}18;color:${t.accent};padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:500">${tag}</span>`).join('')}
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genTeam(t) {
+  const members = [
+    { emoji:'👨‍💼', name:'Alex Johnson', role:'CEO & Founder', desc:'Visionary leader with 10+ years of industry experience.' },
+    { emoji:'👩‍💻', name:'Sarah Chen', role:'Lead Developer', desc:'Full-stack expert passionate about clean, efficient code.' },
+    { emoji:'🎨', name:'Mike Rivera', role:'Design Director', desc:'Creative mind behind our stunning visual experiences.' },
+    { emoji:'📊', name:'Priya Patel', role:'Marketing Head', desc:'Data-driven strategist growing our brand globally.' }
+  ];
+  return `<section id="team" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">The People</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:48px;letter-spacing:-0.5px">Meet Our Team</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+      ${members.map(m=>`<div style="background:${t.card};border:1px solid ${t.accent}15;border-radius:16px;padding:28px;text-align:center">
+        <div style="font-size:3.5rem;margin-bottom:12px">${m.emoji}</div>
+        <h3 style="font-weight:700;margin-bottom:4px">${m.name}</h3>
+        <p style="color:${t.accent};font-size:0.82rem;margin-bottom:10px">${m.role}</p>
+        <p style="color:${t.text2};font-size:0.85rem;line-height:1.5">${m.desc}</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genPricing(t) {
+  const plans = [
+    { name:'Starter', price:'$29', period:'/month', desc:'Perfect for individuals and small projects.', features:['5 Projects','10GB Storage','Email Support','Basic Analytics','API Access'], highlight:false },
+    { name:'Pro', price:'$79', period:'/month', desc:'Everything you need to scale your business.', features:['Unlimited Projects','100GB Storage','Priority Support','Advanced Analytics','API Access','Custom Domain','Team Collaboration'], highlight:true },
+    { name:'Enterprise', price:'$199', period:'/month', desc:'Advanced features for large organizations.', features:['Unlimited Everything','1TB Storage','24/7 Support','Custom Analytics','Dedicated Manager','SLA Guarantee'], highlight:false }
+  ];
+  return `<section id="pricing" style="padding:80px 5%">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Pricing</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px">Simple, Transparent Pricing</h2>
+    <p style="color:${t.text2};margin-bottom:48px">Choose the plan that fits your needs. Upgrade or downgrade at any time.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start">
+      ${plans.map(plan=>`<div style="background:${plan.highlight?t.accent+'18':t.card};border:2px solid ${plan.highlight?t.accent:t.accent+'15'};border-radius:20px;padding:32px;text-align:left;position:relative">
+        ${plan.highlight?`<div style="position:absolute;top:-12px;right:20px;background:${t.btn};color:white;font-size:0.75rem;padding:4px 14px;border-radius:12px;font-weight:600">MOST POPULAR</div>`:''}
+        <h3 style="font-weight:700;margin-bottom:6px">${plan.name}</h3>
+        <p style="color:${t.text2};font-size:0.85rem;margin-bottom:16px">${plan.desc}</p>
+        <div style="font-size:2.5rem;font-weight:900;color:${plan.highlight?t.accent:'inherit'};margin-bottom:24px">${plan.price}<span style="font-size:1rem;font-weight:400;color:${t.text2}">${plan.period}</span></div>
+        <div style="border-top:1px solid ${t.accent}15;padding-top:20px;margin-bottom:20px">
+          ${plan.features.map(f=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span style="color:${t.accent}">✓</span><span style="font-size:0.88rem;color:${t.text2}">${f}</span></div>`).join('')}
+        </div>
+        <a href="#contact" style="display:block;text-align:center;background:${plan.highlight?t.btn:'transparent'};border:1px solid ${plan.highlight?'transparent':t.accent};color:${plan.highlight?'white':t.accent};padding:12px;border-radius:10px;text-decoration:none;font-weight:600;font-size:0.9rem">Get Started</a>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genTestimonials(t) {
+  const reviews = [
+    { text:'Absolutely incredible service. They transformed our digital presence and tripled our conversions.', name:'Emily Watson', role:'CEO, TechCorp', emoji:'⭐' },
+    { text:'The team went above and beyond. Our website now ranks #1 and generates leads automatically.', name:'James Liu', role:'Founder, StartupHub', emoji:'⭐' },
+    { text:'Professional, creative, and fast. Best investment we made for our business. Highly recommend!', name:'Sophia M.', role:'Director, GrowthCo', emoji:'⭐' }
+  ];
+  return `<section id="testimonials" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Testimonials</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:48px;letter-spacing:-0.5px">What Our Clients Say</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      ${reviews.map(r=>`<div style="background:${t.card};border:1px solid ${t.accent}15;border-radius:16px;padding:28px;text-align:left">
+        <div style="color:${t.accent};font-size:1.2rem;margin-bottom:14px">★★★★★</div>
+        <p style="color:${t.text2};line-height:1.7;font-style:italic;margin-bottom:20px">"${r.text}"</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:${t.btn};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem">${r.emoji}</div>
+          <div><div style="font-weight:700;font-size:0.9rem">${r.name}</div><div style="color:${t.accent};font-size:0.78rem">${r.role}</div></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genGallery(t) {
+  const items = ['🌅','🏙️','🌿','🎨','🌊','📷','🎭','🌸','🏔️'];
+  return `<section id="gallery" style="padding:80px 5%">
+  <div style="max-width:1100px;margin:0 auto">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Gallery</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:40px;letter-spacing:-0.5px">Our Gallery</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      ${items.map((em,i)=>`<div style="background:${t.card};border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:3rem;border:1px solid ${t.accent}15;cursor:pointer;transition:transform 0.3s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">${em}</div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genFAQ(t) {
+  const faqs = [
+    { q:'How long does the process take?', a:'Most projects are completed within 2-4 weeks depending on complexity and scope.' },
+    { q:'Do you offer revisions?', a:'Yes! We offer unlimited revisions until you are 100% satisfied with the result.' },
+    { q:'What is your pricing model?', a:'We offer flexible packages. Contact us for a custom quote tailored to your needs.' },
+    { q:'Do you provide ongoing support?', a:'Absolutely. We offer monthly maintenance packages and 24/7 emergency support.' }
+  ];
+  return `<section id="faq" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:760px;margin:0 auto">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;text-align:center">FAQ</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:40px;letter-spacing:-0.5px;text-align:center">Frequently Asked Questions</h2>
+    ${faqs.map((f,i)=>`<details style="background:${t.card};border:1px solid ${t.accent}15;border-radius:12px;margin-bottom:10px;overflow:hidden">
+      <summary style="padding:20px 24px;cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">${f.q}<span style="color:${t.accent};font-size:1.2rem">+</span></summary>
+      <p style="padding:0 24px 20px;color:${t.text2};line-height:1.7;font-size:0.93rem">${f.a}</p>
+    </details>`).join('')}
+  </div>
+</section>`;
+}
+
+function genMenu(t) {
+  const cats = [
+    { name:'Starters', items:[['🥗 Caesar Salad','Fresh romaine with parmesan','$12'],['🍲 Soup du Jour','Daily rotating selection','$9'],['🍤 Crispy Calamari','With marinara dip','$14']] },
+    { name:'Mains', items:[['🍝 Pasta Carbonara','Creamy egg, pancetta, parmesan','$24'],['🥩 Grilled Ribeye','12oz with seasonal veg','$42'],['🐟 Pan-Seared Salmon','Lemon butter, asparagus','$32']] },
+    { name:'Desserts', items:[['🍰 Tiramisu','Classic Italian delight','$10'],['🍫 Lava Cake','Warm chocolate, vanilla ice cream','$11'],['🍓 Panna Cotta','Berry coulis','$9']] }
+  ];
+  return `<section id="menu" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:1100px;margin:0 auto">
+    <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;text-align:center">Discover</p>
+    <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:48px;letter-spacing:-0.5px;text-align:center">Our Menu</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+      ${cats.map(cat=>`<div>
+        <h3 style="font-size:1.1rem;font-weight:700;color:${t.accent};margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid ${t.accent}30">${cat.name}</h3>
+        ${cat.items.map(([name,desc,price])=>`<div style="display:flex;justify-content:space-between;align-items:start;padding:12px 0;border-bottom:1px solid ${t.accent}10">
+          <div><div style="font-weight:600;font-size:0.9rem">${name}</div><div style="color:${t.text2};font-size:0.8rem;margin-top:2px">${desc}</div></div>
+          <div style="color:${t.accent};font-weight:700;white-space:nowrap;margin-left:16px">${price}</div>
+        </div>`).join('')}
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+}
+
+function genNewsletter(t) {
+  return `<section id="newsletter" style="padding:80px 5%;background:${t.surface}">
+  <div style="max-width:600px;margin:0 auto;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:16px">📬</div>
+    <h2 style="font-size:2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px">Stay in the Loop</h2>
+    <p style="color:${t.text2};line-height:1.7;margin-bottom:28px">Get the latest updates, news, and exclusive offers delivered directly to your inbox.</p>
+    <div style="display:flex;gap:10px;max-width:440px;margin:0 auto">
+      <input type="email" placeholder="your@email.com" style="flex:1;background:${t.card};border:1px solid ${t.accent}25;border-radius:10px;color:inherit;font-size:0.9rem;padding:12px 16px;outline:none;font-family:inherit">
+      <button style="background:${t.btn};border:none;color:white;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:600;white-space:nowrap">Subscribe</button>
+    </div>
+    <p style="color:${t.text2};font-size:0.75rem;margin-top:12px">No spam, ever. Unsubscribe anytime.</p>
+  </div>
+</section>`;
+}
+
+function genContact(t) {
+  return `<section id="contact" style="padding:80px 5%">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+    <div>
+      <p style="color:${t.accent};font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Contact</p>
+      <h2 style="font-size:2.2rem;font-weight:800;margin-bottom:16px;letter-spacing:-0.5px">Let's Work Together</h2>
+      <p style="color:${t.text2};line-height:1.7;margin-bottom:36px">Have a project in mind? We'd love to hear from you. Send us a message and we'll get back to you within 24 hours.</p>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:44px;background:${t.accent}15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">📧</div><div><div style="font-size:0.8rem;color:${t.text2}">Email</div><div style="font-weight:600">hello@example.com</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:44px;background:${t.accent}15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">📞</div><div><div style="font-size:0.8rem;color:${t.text2}">Phone</div><div style="font-weight:600">+1 (555) 000-1234</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:44px;background:${t.accent}15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">📍</div><div><div style="font-size:0.8rem;color:${t.text2}">Location</div><div style="font-weight:600">123 Main St, City, Country</div></div></div>
+      </div>
+    </div>
+    <div style="background:${t.card};border-radius:20px;padding:36px;border:1px solid ${t.accent}15">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <input placeholder="Your Name" style="background:${t.surface};border:1px solid ${t.accent}20;border-radius:10px;color:inherit;font-size:0.9rem;padding:13px 16px;outline:none;font-family:inherit;width:100%">
+        <input placeholder="Email Address" type="email" style="background:${t.surface};border:1px solid ${t.accent}20;border-radius:10px;color:inherit;font-size:0.9rem;padding:13px 16px;outline:none;font-family:inherit;width:100%">
+        <input placeholder="Subject" style="background:${t.surface};border:1px solid ${t.accent}20;border-radius:10px;color:inherit;font-size:0.9rem;padding:13px 16px;outline:none;font-family:inherit;width:100%">
+        <textarea placeholder="Your message..." rows="5" style="background:${t.surface};border:1px solid ${t.accent}20;border-radius:10px;color:inherit;font-size:0.9rem;padding:13px 16px;outline:none;font-family:inherit;width:100%;resize:vertical"></textarea>
+        <button style="background:${t.btn};border:none;color:white;padding:14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:1rem;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Send Message →</button>
+      </div>
+    </div>
+  </div>
+</section>`;
+}
+
+function genFooter(t, siteTitle) {
+  return `<footer style="background:${t.surface};border-top:1px solid ${t.accent}15;padding:40px 5%;text-align:center">
+  <div style="font-size:1.3rem;font-weight:800;color:${t.accent};margin-bottom:8px">${siteTitle}</div>
+  <p style="color:${t.text2};font-size:0.85rem;margin-bottom:20px">Building amazing digital experiences.</p>
+  <div style="display:flex;justify-content:center;gap:14px;margin-bottom:24px">
+    ${['Twitter','LinkedIn','GitHub','Instagram'].map(s=>`<a href="#" style="color:${t.text2};font-size:0.82rem;text-decoration:none">${s}</a>`).join('')}
+  </div>
+  <p style="color:${t.text2};font-size:0.75rem">© ${new Date().getFullYear()} ${siteTitle}. All rights reserved. | Built with Voice2Web</p>
+</footer>`;
+}
+
+// ──────────────────────────────────────────────
+// ASSEMBLE FULL WEBSITE
+// ──────────────────────────────────────────────
+function buildWebsite(prompt, parsed) {
+  const t = themes[parsed.theme] || themes.dark;
+  const siteTitle = parsed.title || { portfolio:'My Portfolio', restaurant:'The Restaurant', gym:'FitZone Gym', startup:'StartupCo', ecommerce:'ShopNow', medical:'MedCare Clinic', agency:'Creative Agency', blog:'The Blog', business:'Business Co' }[parsed.type] || 'My Website';
+
+  const sectionMap = { about: genAbout, services: genServices, skills: genSkills, projects: genProjects, team: genTeam, pricing: genPricing, testimonials: genTestimonials, gallery: genGallery, faq: genFAQ, menu: genMenu, newsletter: genNewsletter, contact: genContact };
+
+  const bodySections = parsed.sections.map(s => s === 'hero' ? genHero(t, parsed, prompt) : (sectionMap[s] ? sectionMap[s](t) : '')).join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${siteTitle}</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:${t.bg};color:${t.text};overflow-x:hidden}
+  html{scroll-behavior:smooth}
+  @media(max-width:768px){
+    nav div:last-child a:not(:last-child){display:none}
+    section div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+    section div[style*="grid-template-columns:repeat(3"]{grid-template-columns:repeat(2,1fr)!important}
+  }
+</style>
+</head>
+<body>
+${genNavbar(t, parsed, siteTitle)}
+${bodySections}
+${genFooter(t, siteTitle)}
+</body>
+</html>`;
+}
+
+// ──────────────────────────────────────────────
+// MAIN GENERATE FUNCTION
+// ──────────────────────────────────────────────
+let generatedCode = '';
+let currentTab = 'preview';
+
+async function generateWebsite() {
+  const prompt = document.getElementById('promptBox').value.trim();
+  if (!prompt) { showToast('💬 Please enter a command first!', '#f59e0b'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  const dot = document.getElementById('statusDot');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Generating…';
+  dot.className = 'status-dot loading';
+
+  const typeOverride = document.getElementById('siteType').value;
+  const themeOverride = document.getElementById('colorTheme').value;
+
+  // Simulate AI generation delay
+  await new Promise(r => setTimeout(r, 1400));
+
+  const parsed = parseCommand(prompt, typeOverride, themeOverride);
+  generatedCode = buildWebsite(prompt, parsed);
+
+  // Show preview
+  document.getElementById('emptyState').style.display = 'none';
+
+  if (currentTab === 'preview') {
+    showPreview();
+  } else {
+    showCode();
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+  btnText.textContent = '✨ Regenerate';
+  dot.className = 'status-dot ready';
+
+  showToast(`✅ ${parsed.type.charAt(0).toUpperCase()+parsed.type.slice(1)} website generated!`, '#34d399');
+}
+
+function showPreview() {
+  const frame = document.getElementById('preview-frame');
+  frame.style.display = 'block';
+  document.getElementById('code-view').style.display = 'none';
+  frame.srcdoc = generatedCode;
+}
+
+function showCode() {
+  document.getElementById('preview-frame').style.display = 'none';
+  const cv = document.getElementById('code-view');
+  cv.style.display = 'block';
+  document.getElementById('code-content').textContent = generatedCode;
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (!generatedCode) return;
+  if (tab === 'preview') showPreview();
+  else showCode();
+}
+
+function downloadWebsite() {
+  if (!generatedCode) { showToast('⚠️ Generate a website first!', '#f59e0b'); return; }
+  const blob = new Blob([generatedCode], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'my-website.html';
+  a.click();
+  showToast('⬇️ Downloaded successfully!', '#34d399');
+}
+
+function copyCode() {
+  if (!generatedCode) { showToast('⚠️ Generate a website first!', '#f59e0b'); return; }
+  navigator.clipboard.writeText(generatedCode).then(() => showToast('⎘ Code copied to clipboard!', '#34d399'));
+}
+
+function showToast(msg, color = '#4f8ef7') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span style="color:${color};font-size:1.1rem">●</span> ${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Allow Enter+Ctrl to generate
+document.getElementById('promptBox').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generateWebsite();
+});
+</script>
+</body>
+</html>
